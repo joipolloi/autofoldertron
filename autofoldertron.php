@@ -56,7 +56,12 @@ if (!in_array(intval($parent->get('template')), $parentTemplates)) {
     return false;
 }
 
-$workingDateTime = new DateTime($resource->get($dateField));
+$tvDateField = !in_array($dateField, array('publishedon', 'pub_date', 'unpub_date', 'createdon', 'editedon', 'deletedon'));
+try {
+    $workingDateTime = ($tvDateField) ? new DateTime($resource->getTVValue($dateField)) : new DateTime($resource->get($dateField));
+} catch (Exception $e) {
+    $modx->log(modX::LOG_LEVEL_ERROR, '[Autofoldertron] Unable to parse date from '.$dateField);
+}
 
 $lastParent = $parent;
 // this array should map folderStructure[k] => resource
