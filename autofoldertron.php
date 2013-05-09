@@ -27,7 +27,7 @@ if (in_array($generatedPageTemplate, $parentTemplates)) {
 
 $folderStructure = array_filter(array_map('trim', explode('/', strtolower($modx->getOption('folder_structure', $scriptProperties, 'y/m'))))); // what will be the folder structure beneath the parent template?
 $filterTemplates = array_filter(array_map('intval', explode(',', $modx->getOption('filter_templates', $scriptProperties, ''))));
-$dateField = $modx->getOption('date_field', $scriptProperties, 'publishedon'); // what will be used as the date field?
+$dateFields = array_filter(explode(',', $modx->getOption('date_fields', $scriptProperties, 'publishedon'))); // what will be used as the date field?
 
 $yearAliasFormat = $modx->getOption('year_alias_format', $scriptProperties, 'Y'); // alias format for the generated year folder
 $yearTitleFormat = $modx->getOption('year_title_format', $scriptProperties, 'Y'); // title format for the generated year folder
@@ -55,6 +55,19 @@ if (!in_array(intval($parent->get('template')), $parentTemplates)) {
     $modx->log(modX::LOG_LEVEL_INFO, '[Autofoldertron] Parent template not in parentTemplates');
     return false;
 }
+
+/*
+ * _How this works_: if you have more than one parent template (e.g. 2, 4) then
+ * you can set multiple date fields. For instance, parent_templates = 2,4 and
+ * date_fields = publishedon,pub_date, parent template 2 will use publishedon
+ * while parent template 4 will use pub_date. If however parent_templates = 2,4
+ * and date_fields = publishedon, both will use published on. If
+ * parent_templates = 2,4,6 and date_fields = publishedon,pub_date, then 2 will
+ * use publishedon, 4 will use pub_date and 6 will use the first entry, so
+ * published on
+ */
+$optionOffset = array_search(intval($parent->get('template')), $parentTemplates);
+$dateField = (array_key_exists($optionOffset, $dateFields)) ? $dateFields[$optionOffset] : reset($dateFields);
 
 $tvDateField = !in_array($dateField, array('publishedon', 'pub_date', 'unpub_date', 'createdon', 'editedon', 'deletedon'));
 try {
